@@ -6,6 +6,7 @@ from .user import User
 from .storage import db, elasticsearch, write, panda
 
 import logging as logme
+import json
 
 follows_list = []
 tweets_list = []
@@ -91,10 +92,12 @@ def _output(obj, output, config, **extra):
             for dct in obj.mentions:
                 for key, val in dct.items():
                     dct[key] = val.lower()
+
             for i in range(len(obj.hashtags)):
                 obj.hashtags[i] = obj.hashtags[i].lower()
             for i in range(len(obj.cashtags)):
                 obj.cashtags[i] = obj.cashtags[i].lower()
+
         else:
             logme.info('_output:Lowercase:hiddenTweetFound')
             print("[x] Hidden tweet found, account suspended due to violation of TOS")
@@ -173,10 +176,8 @@ async def Tweets(tweets, config, conn):
 async def Users(u, config, conn):
     logme.debug(__name__ + ':User')
     global users_list
-
     user = User(u)
     output = format.User(config.Format, user)
-
     if config.Database:
         logme.debug(__name__ + ':User:Database')
         db.user(conn, config, user)
@@ -185,8 +186,10 @@ async def Users(u, config, conn):
         logme.debug(__name__ + ':User:Elasticsearch')
         _save_date = user.join_date
         _save_time = user.join_time
-        user.join_date = str(datetime.strptime(user.join_date, "%d %b %Y")).split()[0]
-        user.join_time = str(datetime.strptime(user.join_time, "%I:%M %p")).split()[1]
+        user.join_date = str(datetime.strptime(
+            user.join_date, "%d %b %Y")).split()[0]
+        user.join_time = str(datetime.strptime(
+            user.join_time, "%I:%M %p")).split()[1]
         elasticsearch.UserProfile(user, config)
         user.join_date = _save_date
         user.join_time = _save_time

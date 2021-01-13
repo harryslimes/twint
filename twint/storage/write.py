@@ -3,12 +3,14 @@ import csv
 import json
 import os
 
+
 def outputExt(objType, fType):
     if objType == "str":
         objType = "username"
     outExt = f"/{objType}s.{fType}"
 
     return outExt
+
 
 def addExt(base, objType, fType):
     if len(base.split('.')) == 1:
@@ -17,8 +19,10 @@ def addExt(base, objType, fType):
 
     return base
 
+
 def Text(entry, f):
     print(entry.replace('\n', ' '), file=open(f, "a", encoding="utf-8"))
+
 
 def Type(config):
     if config.User_full:
@@ -29,6 +33,7 @@ def Type(config):
         _type = "tweet"
 
     return _type
+
 
 def struct(obj, custom, _type):
     if custom:
@@ -42,27 +47,40 @@ def struct(obj, custom, _type):
 
     return fieldnames, row
 
+
 def createDirIfMissing(dirname):
     if not os.path.exists(dirname):
         os.makedirs(dirname)
+
 
 def Csv(obj, config):
     _obj_type = obj.__class__.__name__
     if _obj_type == "str":
         _obj_type = "username"
     fieldnames, row = struct(obj, config.Custom[_obj_type], _obj_type)
-    
+
     base = addExt(config.Output, _obj_type, "csv")
     dialect = 'excel-tab' if 'Tabs' in config.__dict__ else 'excel'
-    
+
+    if config.JSON_IN_CSV:
+        row['mentions'] = json.dumps(row['mentions'])
+        row['urls'] = json.dumps(row['urls'])
+        row['photos'] = json.dumps(row['photos'])
+        row['hashtags'] = json.dumps(row['hashtags'])
+        row['cashtags'] = json.dumps(row['cashtags'])
+        row['reply_to'] = json.dumps(row['reply_to'])
+
     if not (os.path.exists(base)):
         with open(base, "w", newline='', encoding="utf-8") as csv_file:
-            writer = csv.DictWriter(csv_file, fieldnames=fieldnames, dialect=dialect)
+            writer = csv.DictWriter(
+                csv_file, fieldnames=fieldnames, dialect=dialect)
             writer.writeheader()
 
     with open(base, "a", newline='', encoding="utf-8") as csv_file:
-        writer = csv.DictWriter(csv_file, fieldnames=fieldnames, dialect=dialect)
+        writer = csv.DictWriter(
+            csv_file, fieldnames=fieldnames, dialect=dialect)
         writer.writerow(row)
+
 
 def Json(obj, config):
     _obj_type = obj.__class__.__name__

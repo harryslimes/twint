@@ -68,6 +68,7 @@ def dict_to_url(dct):
 def get_connector(config):
     logme.debug(__name__ + ':get_connector')
     _connector = None
+    
     if config.Proxy_host:
         if config.Proxy_host.lower() == "tor":
             _connector = ProxyConnector(
@@ -91,6 +92,8 @@ def get_connector(config):
                 proxy_type=_type,
                 host=config.Proxy_host,
                 port=config.Proxy_port,
+                username=config.Proxy_username,
+                password=config.Proxy_password,
                 rdns=True)
         else:
             logme.critical(__name__ + ':get_connector:proxy-port-type-error')
@@ -131,7 +134,7 @@ async def RequestUrl(config, init):
             logme.debug(__name__ + ':RequestUrl:Favorites')
             _url = await url.Favorites(config.Username, init)
         _serialQuery = _url
-
+    
     response = await Request(_url, params=params, connector=_connector, headers=_headers)
 
     if config.Debug:
@@ -194,6 +197,20 @@ async def Username(_id, bearer_token, guest_token):
     username = j_r['data']['user']['legacy']['screen_name']
     return username
 
+async def User_by_id(_id, config, conn):
+    logme.debug(__name__ + ':Username')
+    _dct = {'userId': _id, 'withHighlightedLabel': False}
+    _url = "https://api.twitter.com/graphql/B9FuNQVmyx32rdbIPEZKag/UserByRestId?variables={}".format(dict_to_url(_dct))
+    _headers = {
+        'authorization': config.Bearer_token,
+        'x-guest-token': config.Guest_token,
+    }
+    try:
+        r = await Request(_url, headers=_headers)
+        j_r = loads(r)
+        await Users(j_r, config, conn)
+    except Exception as e:
+        logme.critical(__name__ + ':User:' + str(e))
 
 async def Tweet(url, config, conn):
     logme.debug(__name__ + ':Tweet')
@@ -237,7 +254,7 @@ def Limit(Limit, count):
         return True
 
 
-async def Multi(feed, config, conn):
+async def Multi1(feed, config, conn):
     logme.debug(__name__ + ':Multi')
     count = 0
     try:
@@ -269,6 +286,42 @@ async def Multi(feed, config, conn):
                                                                               config, conn)))
             logme.debug(__name__ + ':Multi:asyncioGather')
             await asyncio.gather(*futures)
+    except Exception as e:
+        # TODO: fix error not error
+        # print(str(e) + " [x] get.Multi")
+        # will return "'NoneType' object is not callable"
+        # but still works
+        # logme.critical(__name__+':Multi:' + str(e))
+        pass
+
+    return count
+
+async def Multi(feed, config, conn):
+    logme.debug(__name__ + ':Multi')
+    count = 0
+    try:
+        for tweet in feed:
+            count += 1
+            if config.Favorites or config.Profile_full:
+                logme.debug(__name__ + ':Multi:Favorites-profileFull')
+                link = tweet.find("a")["href"]
+                url = f"https://twitter.com{link}&lang=en"
+            elif config.User_full:
+                logme.debug(__name__ + ':Multi:userFull')
+                username = tweet.find("a")["name"]
+                url = f"http://twitter.com/{username}?lang=en"
+            else:
+                logme.debug(__name__ + ':Multi:else-url')
+                link = tweet.find("a", "tweet-timestamp js-permalink js-nav js-tooltip")["href"]
+                url = f"https://twitter.com{link}?lang=en"
+
+            if config.User_full:
+                logme.debug(__name__ + ':Multi:user-full-Run')
+                await User(url,config, conn)
+            else:
+                logme.debug(__name__ + ':Multi:notUser-full-Run')
+                await Tweet(url,config, conn)
+            
     except Exception as e:
         # TODO: fix error not error
         # print(str(e) + " [x] get.Multi")

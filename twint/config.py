@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Optional
 
+
 @dataclass
 class Config:
     Username: Optional[str] = None
@@ -31,7 +32,7 @@ class Config:
     To: str = None
     All = None
     Debug: bool = False
-    Format = None
+    Format: Optional[str] = None
     Essid: str = ""
     Profile: bool = False
     Followers: bool = False
@@ -61,6 +62,8 @@ class Config:
     Proxy_host: str = ""
     Proxy_port: int = 0
     Proxy_type: object = None
+    Proxy_username: str = ""
+    Proxy_password: str = ""
     Tor_control_port: int = 9051
     Tor_control_password: str = None
     Retweets: bool = False
@@ -85,3 +88,4 @@ class Config:
     Bearer_token: str = None
     Guest_token: str = None
     deleted: list = None
+    JSON_IN_CSV = True
