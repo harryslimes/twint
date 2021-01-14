@@ -73,7 +73,6 @@ class Token:
                 if attempt < self._retries:
                     # TODO : might wanna tweak this back-off timer
                     sleep_time = 2.0 * 2 ** attempt
-                    print(f'Waiting {sleep_time:.0f} seconds')
                     logme.info(f'Waiting {sleep_time:.0f} seconds')
                     await asyncio.sleep(sleep_time)
             else:

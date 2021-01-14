@@ -111,9 +111,10 @@ class Twint:
                             self.config, response)
                     except NoMoreTweetsException as e:
                         logme.debug(__name__ + ':Twint:Feed:' + str(e))
-                        print('[!] ' + str(e) + ' Scraping will stop now.')
-                        print('found {} deleted tweets in this search.'.format(
-                            len(self.config.deleted)))
+                        if self.config.Debug is True:
+                            print('[!] ' + str(e) + ' Scraping will stop now.')
+                            print('found {} deleted tweets in this search.'.format(
+                                len(self.config.deleted)))
                         break
                 break
             except TimeoutError as e:
