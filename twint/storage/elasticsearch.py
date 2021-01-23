@@ -13,13 +13,16 @@ _is_location_def = False
 _near = {}
 _location = {}
 
-geolocator = Nominatim(user_agent="twint-1.2")
+geolocator = None
 
 class RecycleObject(object):
     def write(self, junk): pass
     def flush(self): pass
 
 def getLocation(place, **options):
+    global geolocator
+    if geolocator is None:
+        geolocator = Nominatim(user_agent="twint-1.2")
     location = geolocator.geocode(place,timeout=1000)
     if location:
         if options.get("near"):
